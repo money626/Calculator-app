@@ -14,22 +14,48 @@
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="80dp">
+
             <TextView
-                android:text=""
-                android:layout_span="2"
+                android:id="@+id/textView"
                 android:layout_width="48dp"
-                android:layout_height="wrap_content" android:id="@+id/textView"/>
-            <Button
-                android:text="AC"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/buttonAC"/>
-            <Button
-                android:text="DEL"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/buttonDEL"/>
+                android:layout_height="50dp"
+                android:layout_span="4"
+                android:lines="1"
+                android:text=""
+                android:textSize="36sp" />
 
         </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <Button
+                android:id="@+id/buttonLeftBracket"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="(" />
+
+            <Button
+                android:id="@+id/buttonRightBracket"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text=")" />
+
+            <Button
+                android:id="@+id/buttonAC"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AC" />
+
+            <Button
+                android:id="@+id/buttonDEL"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="DEL" />
+        </TableRow>
+
         <TableRow android:layout_width="match_parent" android:layout_height="match_parent">
             <Button
                 android:text="7"

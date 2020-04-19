@@ -1,27 +1,26 @@
 package com.example.calculator;
 
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
 
-import androidx.coordinatorlayout.widget.CoordinatorLayout;
-
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Queue;
 import java.util.Stack;
 
-public class MainActivity extends AppCompatActivity implements OnClickListener
+public class MainActivity extends AppCompatActivity implements OnClickListener, OnLongClickListener
 {
 
     TextView textView;
     private boolean calculated;
-
+    private boolean point_added;
+    private boolean negative_set;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -39,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
         findViewById(R.id.button8).setOnClickListener(this);
         findViewById(R.id.button9).setOnClickListener(this);
         findViewById(R.id.buttonDEL).setOnClickListener(this);
+        findViewById(R.id.buttonDEL).setOnLongClickListener(this);
         findViewById(R.id.buttonDevide).setOnClickListener(this);
         findViewById(R.id.buttonMinus).setOnClickListener(this);
         findViewById(R.id.buttonMultiply).setOnClickListener(this);
@@ -46,8 +46,26 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
         findViewById(R.id.buttonEqual).setOnClickListener(this);
         findViewById(R.id.buttonAC).setOnClickListener(this);
         findViewById(R.id.buttonPoint).setOnClickListener(this);
+        findViewById(R.id.buttonLeftBracket).setOnClickListener(this);
+        findViewById(R.id.buttonRightBracket).setOnClickListener(this);
         textView = findViewById(R.id.textView);
+        textView.setMovementMethod(new ScrollingMovementMethod());
         calculated = false;
+        point_added = false;
+        negative_set = false;
+    }
+
+    public boolean onLongClick(View v)
+    {
+        if (v.getId() == R.id.buttonDEL)
+        {
+            textView.setText("");
+            calculated = false;
+            point_added = false;
+            negative_set = false;
+            return true;
+        }
+        return false;
     }
 
     public void onClick(View v)
@@ -102,11 +120,20 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
             case R.id.buttonPoint:
                 add_parameter_to_textView('.');
                 break;
+            case R.id.buttonLeftBracket:
+                add_parameter_to_textView('(');
+                break;
+            case R.id.buttonRightBracket:
+                add_parameter_to_textView(')');
+                break;
             case R.id.buttonEqual:
                 calculate();
                 break;
             case R.id.buttonAC:
                 textView.setText("");
+                calculated = false;
+                point_added = false;
+                negative_set = false;
         }
     }
 
@@ -127,6 +154,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
         {
             textView.append("" + in);
         }
+        negative_set = false;
     }
 
     private void add_parameter_to_textView(char in)
@@ -144,30 +172,70 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
             String sub = text.substring(0, text.length() - 1) + in;
             if (in == '.')
             {
-                if (last.equals("."))
+                if (!point_added)
                 {
-                    return;
+                    textView.append("" + in);
+                    point_added = true;
+                }
+            }
+            else if (in == '-')
+            {
+                if (!"-".contains(last))
+                {
+                    textView.append("" + in);
+                    if ("+*/".contains(last))
+                    {
+                        negative_set = true;
+                    }
                 }
                 else
                 {
-                    if (text.matches("(\\d*\\.*\\d*[*+/\\-]*)+\\d*\\.\\d+"))
-                    {
-                        Log.e("err", text);
-                        return;
-                    }
-                    textView.append("" + in);
-                    return;
+                    textView.setText(sub);
                 }
-            }
-
-            if (!"+-*/".contains(last))
-            {
-                textView.append("" + in);
+                point_added = false;
             }
             else
             {
-                textView.setText(sub);
+                if (last.equals("("))
+                {
+                    if(!"+*/".contains(""+in))
+                    {
+                        textView.append("" + in);
+                    }
+                    else
+                    {
+                        negative_set = false;
+                    }
+                }
+                else
+                {
+                    if(!negative_set)
+                    {
+                        if (!"+-*/".contains(last))
+                        {
+                            textView.append("" + in);
+                            negative_set = false;
+                        }
+                        else
+                        {
+                            if (in == '(' || in == ')')
+                            {
+                                textView.append("" + in);
+                                negative_set = false;
+                            }
+                            else
+                            {
+                                textView.setText(sub);
+                            }
+
+                        }
+                    }
+
+                }
+
+                point_added = false;
             }
+
 
         }
         else
@@ -175,6 +243,11 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
             if (in == '.')
             {
                 textView.setText(".");
+                point_added = true;
+            }
+            else if (in == '(' || in == ')')
+            {
+                textView.setText("" + in);
             }
         }
 
@@ -185,15 +258,23 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
     {
         String text = textView.getText().toString();
 
-
+        if (text.substring(text.length()-1).equals("-"))
+        {
+            negative_set = false;
+        }
         if (text.length() > 0)
         {
+
             if (text.equals("Invalid Expression"))
             {
                 textView.setText("");
             }
             else
             {
+                if (text.substring(text.length() - 1).equals("."))
+                {
+                    point_added = false;
+                }
                 textView.setText(text.substring(0, text.length() - 1));
             }
         }
@@ -226,7 +307,7 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
     private void calculate()
     {
         String text = textView.getText().toString();
-        System.out.println(text);
+        Log.i("text", text);
         if (text.matches("(\\d*\\.*\\d+[+*/\\-])+"))
         {
             textView.setText("Invalid Expression");
@@ -235,10 +316,15 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
         {
             Stack<String> stack = new Stack<>();
             ArrayList<String> postfix = infix2postfix(text);
+            for (String string : postfix)
+            {
+                Log.i("String", string);
+            }
             while (!postfix.isEmpty())
             {
                 String next = postfix.get(0);
                 postfix.remove(0);
+                Log.i("next", next);
                 if (next.length() > 1)
                 {
                     stack.push(next);
@@ -248,28 +334,38 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
                     if ("+-*/".contains(next))
                     {
                         float num, num1, num2;
-                        num1 = Float.parseFloat(stack.pop());
-                        num2 = Float.parseFloat(stack.pop());
-                        switch (next.charAt(0))
+                        try
                         {
-                            case '+':
-                                num = num2 + num1;
-                                break;
-                            case '-':
-                                num = num2 - num1;
-                                break;
-                            case '*':
-                                num = num2 * num1;
-                                break;
-                            case '/':
-                                num = num2 / num1;
-                                break;
-                            default:
-                                num = 0;
+                            num1 = Float.parseFloat(stack.pop());
+                            num2 = Float.parseFloat(stack.pop());
+                            Log.i("num1", String.valueOf(num1));
+                            Log.i("num2", String.valueOf(num2));
+                            switch (next.charAt(0))
+                            {
+                                case '+':
+                                    num = num2 + num1;
+                                    break;
+                                case '-':
+                                    num = num2 - num1;
+                                    break;
+                                case '*':
+                                    num = num2 * num1;
+                                    break;
+                                case '/':
+                                    num = num2 / num1;
+                                    break;
+                                default:
+                                    num = 0;
+                            }
+                            System.out.println(num);
+                            stack.push(Float.toString(num));
+                        }
+                        catch (Exception e)
+                        {
+                            Log.e("Exception", String.valueOf(e));
                         }
 
-                        System.out.println(num);
-                        stack.push(Float.toString(num));
+
                     }
                     else
                     {
@@ -277,40 +373,129 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
                     }
                 }
             }
-            textView.setText(stack.pop());
+            if (stack.isEmpty())
+            {
+                textView.setText("Invalid Expression");
+            }
+            else
+            {
+                textView.setText(stack.pop());
+            }
         }
         calculated = true;
     }
 
     public ArrayList<String> infix2postfix(String infix)
     {
-        String text = textView.getText().toString();
+
         StringBuilder SB = new StringBuilder();
         ArrayList<String> stringArray = new ArrayList<>();
-        for (int i = 0; i < text.length(); i++)
+        boolean last_was_parameter = false;
+        for (int i = 0; i < infix.length(); i++)
         {
-            if ("+-*/".contains("" + text.charAt(i)))
+            char current = infix.charAt(i);
+            if (current == '(')
+            {
+                if (SB.length() > 0)
+                {
+                    stringArray.add(SB.toString());
+                    SB.delete(0, SB.length());
+                    stringArray.add("*");
+                    last_was_parameter = true;
+                    stringArray.add("(");
+                }
+                else
+                {
+                    stringArray.add("(");
+                    last_was_parameter = true;
+                }
+            }
+            else if (current == ')')
             {
                 stringArray.add(SB.toString());
-                stringArray.add("" + text.charAt(i));
                 SB.delete(0, SB.length());
+                last_was_parameter = false;
+                if (infix.length() > i + 1)
+                {
+
+                    stringArray.add(")");
+                    if (!"+-/*".contains("" + infix.charAt(i + 1)))
+                    {
+                        stringArray.add("*");
+                        last_was_parameter = true;
+
+                    }
+                }
+                else
+                {
+                    stringArray.add(")");
+                }
+
+            }
+            else if (current == '-')
+            {
+                if (!last_was_parameter)
+                {
+                    stringArray.add("" + current);
+                }
+                else
+                {
+                    SB.append(current);
+                }
+            }
+            else if ("+*/".contains("" + current))
+            {
+                if (SB.length() > 0)
+                {
+                    stringArray.add(SB.toString());
+                }
+                stringArray.add("" + current);
+                SB.delete(0, SB.length());
+                last_was_parameter = true;
             }
             else
             {
-                SB.append(text.charAt(i));
+                SB.append(current);
             }
         }
-        stringArray.add(SB.toString());
+        if (SB.length() > 0)
+        {
+            stringArray.add(SB.toString());
+        }
+
         Stack<String> stack = new Stack<>();
         ArrayList<String> postfix = new ArrayList<>();
         for (String string : stringArray)
         {
-            Log.e("string", string);
+            Log.i("string", string);
             if (string.length() == 1)
             {
-                if ("+-*/".contains(string))
+                if (string.matches("\\d"))
                 {
-                    System.out.println("Hello");
+                    postfix.add(string);
+                }
+                else if (string.equals("("))
+                {
+                    stack.push(string);
+                }
+                else if (string.equals(")"))
+                {
+                    while (!stack.isEmpty() && !stack.peek().equals("("))
+                    {
+                        postfix.add(stack.pop());
+                    }
+                    if (!stack.isEmpty() && !stack.peek().equals("("))
+                    {
+                        postfix.clear();
+                        return postfix;
+                    }
+                    else
+                    {
+                        stack.pop();
+                    }
+                }
+                else
+                {
                     while (!stack.isEmpty() && prec(string.charAt(0)) <= prec(stack.peek().charAt(0)))
                     {
                         if (stack.peek().equals("("))
@@ -321,10 +506,6 @@ public class MainActivity extends AppCompatActivity implements OnClickListener
                         postfix.add(stack.pop());
                     }
                     stack.push(string);
-                }
-                else
-                {
-                    postfix.add(string);
                 }
             }
             else
